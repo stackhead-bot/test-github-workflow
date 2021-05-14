@@ -1,23 +1,36 @@
-# This is a basic workflow that is manually triggered
+# This is a basic workflow that is triggered on pull request review submissions
+# 
+# Caveats:
+# - triggers everytime a code review is submitted (i.e. approved, commented or rejected)
+# - the last action that triggered this action needs to be "approved" in order to succeed
+#
+# github.event.review.state will contain the state of the review ("commented", "changes_requested", "approved")
 
 name: Triggered by PR approval
-
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
 on:
   pull_request_review:
     types: [submitted]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "greet"
-  greet:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+# Simply running a job on approval does not work,
+# as the workflow will also succeed when this step is skipped when review was commented or rejected
+#  integrationtest:
+#    name: Run integration test
+#    runs-on: ubuntu-latest
+#    steps:
+#      - run: echo "Run code..." 
+#        if: github.event.review.state == 'approved' # commented, changes_requested, approved
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  checkLabel:
+    name: Code was not approved
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     steps:
-    # Runs a single command using the runners shell
-    - name: Send greeting
-      run: echo "Hello world! ${{github.event.review.state }}" # commented, changes_requested, approved
-      if: github.event.review.state == 'approved'
+      - run: if [ ${{ github.event.review.state }} != 'approved' ]; then exit 1; else exit 0; fi
+
+  integrationtest:
+    name: Run integration test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Run code..." 
