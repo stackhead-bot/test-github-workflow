@@ -19,4 +19,5 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: Send greeting
-      run: echo "Hello world! ${{github.event.review.state }}"
+      run: echo "Hello world! ${{github.event.review.state }}" # commented, changes_requested, approved
+      if: github.event.review.state == 'approved'
